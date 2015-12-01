@@ -117,7 +117,7 @@ public class AM_Server_Frame extends javax.swing.JFrame {
                     
                 //}
                 
-                System.out.println("Message Received: " + message);
+                System.out.println("Account Management server Received: " + message);
 
                 //closing the socket
                 socket.close();
@@ -130,7 +130,7 @@ public class AM_Server_Frame extends javax.swing.JFrame {
             String errorMessage = "Server could not be started,\nmake sure that port 1025 is available";
             showMessage(errorMessage);
         } catch (ClassNotFoundException ex) {
-            Logger.getLogger(AM_Server_Frame.class.getName()).log(Level.SEVERE, null, ex);
+            showMessage("Class not found");
         }
     }//GEN-LAST:event_startButtonActionPerformed
 

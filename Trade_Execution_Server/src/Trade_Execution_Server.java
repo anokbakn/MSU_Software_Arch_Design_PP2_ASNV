@@ -3,21 +3,25 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
-
-
 /**
+ * This class acts both as a server and a clients
  *
  * @author Armand Nokbak
  */
 public class Trade_Execution_Server extends javax.swing.JFrame {
 
-    
+    //static server socket
+    private static ServerSocket teServer;
+    //the port number for the Trade Execution Server
+    private static int tePort = 1026;
+
     /**
      * Creates new form Trade_Execution_Server
      */
@@ -52,6 +56,7 @@ public class Trade_Execution_Server extends javax.swing.JFrame {
 
         stopAMServer.setFont(new java.awt.Font("Times New Roman", 0, 12)); // NOI18N
         stopAMServer.setText("Stop AM Server");
+        stopAMServer.setEnabled(false);
         stopAMServer.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 stopAMServerActionPerformed(evt);
@@ -86,56 +91,109 @@ public class Trade_Execution_Server extends javax.swing.JFrame {
 
     private void connectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_connectButtonActionPerformed
         /**
-        * some of the client definition is inspired from the code found on 
-        * http://www.journaldev.com/741/java-socket-server-client-read-write-example
-        * **/
+         * Server definition
+         */
         try {
-            InetAddress  host = InetAddress.getLocalHost();
-            Socket socket = null;
-            ObjectOutputStream outputStream = null;
-            ObjectInputStream inputStream = null;
-            
-            //establish socket connection to server
-            socket = new Socket(host.getHostName(), 1025);
-            //write to socket using ObjectOutputStream
-            outputStream = new ObjectOutputStream(socket.getOutputStream());
-            outputStream.writeObject("Hello");
-            
-            
-            inputStream.close();
-            outputStream.close();
-            socket.close();
+            //create the Trade Execution Server socket object
+            teServer = new ServerSocket(tePort);
 
+            //keep listening
+            while (true) {
+                //Let user know that AM Server is on
+                showInfoMessage("Trade Execution Server started. Waiting for connection ...");
+                //waiting for client connections
+                Socket socket = teServer.accept();
 
+                //read from socket to ObjectInputStream object
+                ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
+                //convert ObjectInputStream object to String
+                String message = (String) inputStream.readObject();
+                
+                System.out.println("Trade Execution Server received message:" + message);
 
-        } catch (UnknownHostException ex) {
-            showMessage("UnKnow Host");
+                if (message.equalsIgnoreCase("exit")) {
+                    // close the server
+                    teServer.close();
+                    showInfoMessage("Trade Execution Server stopped successfully!");
+                    break;
+                } else if (message.equalsIgnoreCase("login")) {
+                    /**
+                     * some of the client definition is inspired from the code
+                     * found on
+                     * http://www.journaldev.com/741/java-socket-server-client-read-write-example
+                     *
+                     * CLIENT DEFINITION
+        *
+                     */
+                    try {
+                        InetAddress host = InetAddress.getLocalHost();
+                        Socket clientSocket = null;
+                        ObjectOutputStream clientOutputStream = null;
+                        ObjectInputStream clientInputStream = null;
+
+                        //establish socket connection to server
+                        clientSocket = new Socket(host.getHostName(), 1025);
+                        //enable stopAMServer button
+                        stopAMServer.setEnabled(true);
+                        //write to socket using ObjectOutputStream
+                        clientOutputStream = new ObjectOutputStream(clientSocket.getOutputStream());
+                        clientOutputStream.writeObject("Hello");
+
+                        //clientInputStream.close();
+                        clientOutputStream.close();
+                        clientSocket.close();
+
+                    } catch (UnknownHostException ex) {
+                        showMessage("UnKnown Host");
+                    } catch (IOException ex) {
+                        showMessage("Did you start the AM Server?");
+                    }
+                    /**
+                     * END OF CLIENT DEFINITION
+                     */
+                }
+
+                System.out.println("Message Received: " + message);
+
+                //closing the socket
+                socket.close();
+
+            }//end of while true
+
         } catch (IOException ex) {
-            showMessage("IO exception");
+            String errorMessage = "Server could not be started,\nmake sure that port 1026 is available";
+            showMessage(errorMessage);
+        } catch (ClassNotFoundException ex) {
+            showMessage("Class not found");
         }
+
+        /**
+         * END of server definition
+         */
+
     }//GEN-LAST:event_connectButtonActionPerformed
 
     private void stopAMServerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopAMServerActionPerformed
         /**
-        * some of the client definition is inspired from the code found on 
-        * http://www.journaldev.com/741/java-socket-server-client-read-write-example
-        * **/
+         * some of the client definition is inspired from the code found on
+         * http://www.journaldev.com/741/java-socket-server-client-read-write-example
+        * *
+         */
         try {
-            InetAddress  host = InetAddress.getLocalHost();
+            InetAddress host = InetAddress.getLocalHost();
             Socket socket = null;
             ObjectOutputStream outputStream = null;
             ObjectInputStream inputStream = null;
-            
+
             //establish socket connection to server
             socket = new Socket(host.getHostName(), 1025);
             //write to socket using ObjectOutputStream
             outputStream = new ObjectOutputStream(socket.getOutputStream());
             outputStream.writeObject("exit");
-            
-            inputStream.close();
+
+            //inputStream.close();
             outputStream.close();
             socket.close();
-
 
         } catch (UnknownHostException ex) {
             showMessage("UnKnow Host");
@@ -146,10 +204,10 @@ public class Trade_Execution_Server extends javax.swing.JFrame {
 
     /**
      * @param args the command line arguments
-     * 
-     * 
+     *
+     *
      */
-    public static void main(String args[]){
+    public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
@@ -173,7 +231,7 @@ public class Trade_Execution_Server extends javax.swing.JFrame {
         }
         //</editor-fold>
         // getting the local ip address
-        
+
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
@@ -182,22 +240,24 @@ public class Trade_Execution_Server extends javax.swing.JFrame {
             }
         });
     }
-    
+
     /**
      * displays an error message
-     * @param errorMessage 
+     *
+     * @param errorMessage
      */
     private void showMessage(String errorMessage) {
-        
+
         JOptionPane.showMessageDialog(null, errorMessage, "Alert", JOptionPane.ERROR_MESSAGE);
     }
-    
+
     /**
      * displays an information message
-     * @param errorMessage 
+     *
+     * @param errorMessage
      */
     private void showInfoMessage(String errorMessage) {
-        
+
         JOptionPane.showMessageDialog(null, errorMessage, "Information", JOptionPane.INFORMATION_MESSAGE);
     }
 

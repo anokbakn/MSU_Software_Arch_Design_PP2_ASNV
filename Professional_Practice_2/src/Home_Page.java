@@ -1,5 +1,12 @@
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 
 /*
  * 
@@ -34,6 +41,7 @@ public class Home_Page extends javax.swing.JFrame {
         usernameLabel1 = new javax.swing.JLabel();
         passwordTextField = new javax.swing.JTextField();
         loginButton = new javax.swing.JButton();
+        stopTEServerButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Trade Net Brokerage System");
@@ -75,9 +83,8 @@ public class Home_Page extends javax.swing.JFrame {
                 .addGap(7, 7, 7)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(loginButton, javax.swing.GroupLayout.DEFAULT_SIZE, 211, Short.MAX_VALUE)
-                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addComponent(usernameTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 211, Short.MAX_VALUE)
-                        .addComponent(passwordTextField)))
+                    .addComponent(usernameTextField, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 211, Short.MAX_VALUE)
+                    .addComponent(passwordTextField, javax.swing.GroupLayout.Alignment.TRAILING))
                 .addGap(70, 70, 70))
             .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanel1Layout.createSequentialGroup()
@@ -104,13 +111,25 @@ public class Home_Page extends javax.swing.JFrame {
                     .addContainerGap(199, Short.MAX_VALUE)))
         );
 
+        stopTEServerButton.setFont(new java.awt.Font("Times New Roman", 0, 12)); // NOI18N
+        stopTEServerButton.setMnemonic('s');
+        stopTEServerButton.setText("Stop Trade Execution Server");
+        stopTEServerButton.setEnabled(false);
+        stopTEServerButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                stopTEServerButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(400, 400, 400)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(stopTEServerButton)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(20, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -118,15 +137,79 @@ public class Home_Page extends javax.swing.JFrame {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap(242, Short.MAX_VALUE)
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(223, 223, 223))
+                .addGap(18, 18, 18)
+                .addComponent(stopTEServerButton)
+                .addGap(182, 182, 182))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void loginButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginButtonActionPerformed
-        // TODO add your handling code here:
+        /**
+                     * some of the client definition is inspired from the code
+                     * found on
+                     * http://www.journaldev.com/741/java-socket-server-client-read-write-example
+                     *
+                     * CLIENT DEFINITION
+        *
+                     */
+                    try {
+                        InetAddress host = InetAddress.getLocalHost();
+                        Socket clientSocket = null;
+                        ObjectOutputStream clientOutputStream = null;
+                        ObjectInputStream clientInputStream = null;
+
+                        //establish socket connection to server
+                        clientSocket = new Socket(host.getHostName(), 1026);
+                        //enable stopAMServer button
+                        stopTEServerButton.setEnabled(true);
+                        //write to socket using ObjectOutputStream
+                        clientOutputStream = new ObjectOutputStream(clientSocket.getOutputStream());
+                        clientOutputStream.writeObject("login");
+
+                        //clientInputStream.close();
+                        clientOutputStream.close();
+                        clientSocket.close();
+
+                    } catch (UnknownHostException ex) {
+                        showMessage("UnKnown Host");
+                    } catch (IOException ex) {
+                        showMessage("Did you start the AM Server?");
+                    }
+                    /**
+                     * END OF CLIENT DEFINITION
+                     */
     }//GEN-LAST:event_loginButtonActionPerformed
+
+    private void stopTEServerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopTEServerButtonActionPerformed
+        /**
+         * some of the client definition is inspired from the code found on
+         * http://www.journaldev.com/741/java-socket-server-client-read-write-example
+        * *
+         */
+        try {
+            InetAddress host = InetAddress.getLocalHost();
+            Socket socket = null;
+            ObjectOutputStream outputStream = null;
+            ObjectInputStream inputStream = null;
+
+            //establish socket connection to server
+            socket = new Socket(host.getHostName(), 1026);
+            //write to socket using ObjectOutputStream
+            outputStream = new ObjectOutputStream(socket.getOutputStream());
+            outputStream.writeObject("exit");
+
+            //inputStream.close();
+            outputStream.close();
+            socket.close();
+
+        } catch (UnknownHostException ex) {
+            showMessage("UnKnow Host");
+        } catch (IOException ex) {
+            showMessage("IO exception");
+        }
+    }//GEN-LAST:event_stopTEServerButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -164,12 +247,33 @@ public class Home_Page extends javax.swing.JFrame {
             }
         });
     }
+    
+    /**
+     * displays an error message
+     *
+     * @param errorMessage
+     */
+    private void showMessage(String errorMessage) {
+
+        JOptionPane.showMessageDialog(null, errorMessage, "Alert", JOptionPane.ERROR_MESSAGE);
+    }
+
+    /**
+     * displays an information message
+     *
+     * @param errorMessage
+     */
+    private void showInfoMessage(String errorMessage) {
+
+        JOptionPane.showMessageDialog(null, errorMessage, "Information", JOptionPane.INFORMATION_MESSAGE);
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel jPanel1;
     private javax.swing.JButton loginButton;
     private javax.swing.JLabel passwordLabel;
     private javax.swing.JTextField passwordTextField;
+    private javax.swing.JButton stopTEServerButton;
     private javax.swing.JLabel usernameLabel1;
     private javax.swing.JTextField usernameTextField;
     // End of variables declaration//GEN-END:variables
