@@ -6,6 +6,9 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
@@ -21,12 +24,14 @@ public class Trade_Execution_Server extends javax.swing.JFrame {
     private static ServerSocket teServer;
     //the port number for the Trade Execution Server
     private static int tePort = 1026;
+    Person user = null;
 
     /**
      * Creates new form Trade_Execution_Server
      */
     public Trade_Execution_Server() {
         initComponents();
+        user = new Person();
     }
 
     /**
@@ -39,7 +44,7 @@ public class Trade_Execution_Server extends javax.swing.JFrame {
     private void initComponents() {
 
         connectButton = new javax.swing.JButton();
-        stopAMServer = new javax.swing.JButton();
+        stopAMServerButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Trade Execution Server");
@@ -54,12 +59,13 @@ public class Trade_Execution_Server extends javax.swing.JFrame {
             }
         });
 
-        stopAMServer.setFont(new java.awt.Font("Times New Roman", 0, 12)); // NOI18N
-        stopAMServer.setText("Stop AM Server");
-        stopAMServer.setEnabled(false);
-        stopAMServer.addActionListener(new java.awt.event.ActionListener() {
+        stopAMServerButton.setFont(new java.awt.Font("Times New Roman", 0, 12)); // NOI18N
+        stopAMServerButton.setMnemonic('s');
+        stopAMServerButton.setText("Stop AM Server");
+        stopAMServerButton.setEnabled(false);
+        stopAMServerButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                stopAMServerActionPerformed(evt);
+                stopAMServerButtonActionPerformed(evt);
             }
         });
 
@@ -73,17 +79,17 @@ public class Trade_Execution_Server extends javax.swing.JFrame {
                 .addGap(150, 150, 150))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(stopAMServer)
-                .addGap(30, 30, 30))
+                .addComponent(stopAMServerButton)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(95, 95, 95)
                 .addComponent(connectButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 129, Short.MAX_VALUE)
-                .addComponent(stopAMServer)
-                .addGap(30, 30, 30))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 148, Short.MAX_VALUE)
+                .addComponent(stopAMServerButton)
+                .addContainerGap())
         );
 
         pack();
@@ -100,7 +106,7 @@ public class Trade_Execution_Server extends javax.swing.JFrame {
             //keep listening
             while (true) {
                 //Let user know that AM Server is on
-                showInfoMessage("Trade Execution Server started. Waiting for connection ...");
+                //showInfoMessage("Trade Execution Server started. Waiting for connection ...");
                 //waiting for client connections
                 Socket socket = teServer.accept();
 
@@ -108,23 +114,31 @@ public class Trade_Execution_Server extends javax.swing.JFrame {
                 ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
                 //convert ObjectInputStream object to String
                 String message = (String) inputStream.readObject();
-                
-                System.out.println("Trade Execution Server received message:" + message);
+                //splits the passed message into tokens
+                String[] messageArray = message.split("\\s");
+                //the AM server response
+                String amResponseMessage = "";
 
-                if (message.equalsIgnoreCase("exit")) {
+                
+                //System.out.println("Trade Execution Server received message:" + message);
+
+                if (messageArray[0].equalsIgnoreCase("exit")) {
                     // close the server
                     teServer.close();
                     showInfoMessage("Trade Execution Server stopped successfully!");
                     break;
-                } else if (message.equalsIgnoreCase("login")) {
+                } else if (messageArray[0].equalsIgnoreCase("login")) {
+                    
+                    System.out.println("TE server received login");
+                    
                     /**
                      * some of the client definition is inspired from the code
                      * found on
                      * http://www.journaldev.com/741/java-socket-server-client-read-write-example
                      *
                      * CLIENT DEFINITION
-        *
                      */
+                     
                     try {
                         InetAddress host = InetAddress.getLocalHost();
                         Socket clientSocket = null;
@@ -134,12 +148,19 @@ public class Trade_Execution_Server extends javax.swing.JFrame {
                         //establish socket connection to server
                         clientSocket = new Socket(host.getHostName(), 1025);
                         //enable stopAMServer button
-                        stopAMServer.setEnabled(true);
+                        stopAMServerButton.setEnabled(true);
                         //write to socket using ObjectOutputStream
                         clientOutputStream = new ObjectOutputStream(clientSocket.getOutputStream());
-                        clientOutputStream.writeObject("Hello");
+                        clientOutputStream.writeObject(message);
+                        
+                        //read from socket to ObjectInputStream object
+                        clientInputStream = new ObjectInputStream(clientSocket.getInputStream());
+                        //convert ObjectInputStream object to String
+                        //this is the response from the AM server that should be passed on to the Trade Net brokerage client
+                        amResponseMessage = (String) clientInputStream.readObject();
 
-                        //clientInputStream.close();
+                        //closing streams
+                        clientInputStream.close();
                         clientOutputStream.close();
                         clientSocket.close();
 
@@ -148,10 +169,17 @@ public class Trade_Execution_Server extends javax.swing.JFrame {
                     } catch (IOException ex) {
                         showMessage("Did you start the AM Server?");
                     }
-                    /**
-                     * END OF CLIENT DEFINITION
+                    
+                     /** END OF CLIENT DEFINITION
                      */
                 }
+                /**
+                 * now transmitting data to the Trade Net Brokerage client
+                 */
+                //write to Trade Net brokearge client socket using ObjectOutputStream
+                ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
+                outputStream.writeObject(amResponseMessage);
+
 
                 System.out.println("Message Received: " + message);
 
@@ -173,7 +201,7 @@ public class Trade_Execution_Server extends javax.swing.JFrame {
 
     }//GEN-LAST:event_connectButtonActionPerformed
 
-    private void stopAMServerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopAMServerActionPerformed
+    private void stopAMServerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopAMServerButtonActionPerformed
         /**
          * some of the client definition is inspired from the code found on
          * http://www.journaldev.com/741/java-socket-server-client-read-write-example
@@ -200,7 +228,7 @@ public class Trade_Execution_Server extends javax.swing.JFrame {
         } catch (IOException ex) {
             showMessage("IO exception");
         }
-    }//GEN-LAST:event_stopAMServerActionPerformed
+    }//GEN-LAST:event_stopAMServerButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -250,6 +278,8 @@ public class Trade_Execution_Server extends javax.swing.JFrame {
 
         JOptionPane.showMessageDialog(null, errorMessage, "Alert", JOptionPane.ERROR_MESSAGE);
     }
+    
+    
 
     /**
      * displays an information message
@@ -263,6 +293,6 @@ public class Trade_Execution_Server extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton connectButton;
-    private javax.swing.JButton stopAMServer;
+    private javax.swing.JButton stopAMServerButton;
     // End of variables declaration//GEN-END:variables
 }
