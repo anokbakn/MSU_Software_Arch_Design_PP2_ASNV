@@ -129,7 +129,7 @@ public class Person extends Bank{
             
             
         } catch (NoSuchAlgorithmException ex) {
-            Logger.getLogger(Admin.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Person.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         return sb.toString();
