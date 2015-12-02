@@ -5,6 +5,8 @@
  */
 //package sw_arch_pp;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,7 +16,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author anokbakn
+ * @author Armand Nokbak
  */
 public class Person extends Bank{
     private String fname;
@@ -52,6 +54,9 @@ public class Person extends Bank{
     public String login(String username, String pwd){
         String result = "";
         
+        //getting MD5 value of password
+        String md5Pwd = convertPasswordToMD5(pwd);
+        
         SQLiteJDBC db = new SQLiteJDBC();
         //open db connection
         db.openConn();
@@ -60,7 +65,7 @@ public class Person extends Bank{
         try {
             db.c.setAutoCommit(false);
             stmt = db.c.createStatement();
-            rs = stmt.executeQuery("SELECT * FROM Person WHERE USERNAME = '"+ username+"' AND PASSWORD = '"+ pwd +"';");
+            rs = stmt.executeQuery("SELECT * FROM Person WHERE USERNAME = '"+ username+"' AND PASSWORD = '"+ md5Pwd +"';");
             
             //System.out.println(rs);
             
@@ -99,6 +104,35 @@ public class Person extends Bank{
         db.closeConn();
         
         return result;
+    }
+    
+    /**
+     * this method takes in a password and returns its MD5 value
+     * inspired from code at http://www.mkyong.com/java/java-md5-hashing-example/
+     * 
+     * @param password
+     * @return 
+     */
+    public String convertPasswordToMD5(String password){
+        StringBuffer sb = null;
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.update(password.getBytes());
+            
+            byte byteData[] = md.digest();
+            
+            //convert the byte to hex format method 1
+            sb = new StringBuffer();
+            for (int i = 0; i < byteData.length; i++) {
+                sb.append(Integer.toString((byteData[i] & 0xff) + 0x100, 16).substring(1));
+            }
+            
+            
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(Admin.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return sb.toString();
     }
     
     public boolean logout(){

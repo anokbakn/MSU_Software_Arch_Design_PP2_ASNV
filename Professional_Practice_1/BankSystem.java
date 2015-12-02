@@ -1,15 +1,10 @@
 
 import java.util.Scanner;
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-//package sw_arch_pp;
+
 /**
  *
- * @author anokbakn
+ * @author Armand Nokbak
  */
 public class BankSystem {
 
@@ -232,13 +227,13 @@ public class BankSystem {
                         long ssn2 = in.nextLong();
                         String type = "";
                         do {
-                            if (type.equalsIgnoreCase("c") || type.equalsIgnoreCase("s")) {
+                            if (type.equalsIgnoreCase("c") || type.equalsIgnoreCase("s") || type.equalsIgnoreCase("b")) {
                                 //do nothing
                             } else {
-                                System.out.println("--Enter type of account C for checking and S for savings");
+                                System.out.println("--Enter type of account C for checking and S for savings or B for brokerage");
                                 type = in.next();
                             }
-                        } while (!(type.equalsIgnoreCase("c") || type.equalsIgnoreCase("s")));
+                        } while (!(type.equalsIgnoreCase("c") || type.equalsIgnoreCase("s") || type.equalsIgnoreCase("b")));
 
                         boolean success2 = admin.assignAccountToCustomer(ssn2, type, admin.getSsn());
                         if (success2) {

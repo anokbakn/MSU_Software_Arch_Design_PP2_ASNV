@@ -1,10 +1,7 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-//package sw_arch_pp;
 
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -18,7 +15,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author anokbakn
+ * @author Armand Nokbak
  */
 /**
  * AN ADMIN INHERITS PROPERTIES FROM THE PERSON CLASS
@@ -63,13 +60,16 @@ public class Admin extends Person {
         //open db connection
         db.openConn();
         Statement stmt = null;
+        
+        //getting MD5 value of password
+        String md5Pwd = convertPasswordToMD5(pwd);
 
         try {
             stmt = db.c.createStatement();
             //creating customer record in person table
             String sql = "INSERT INTO Person (firstname,lastname, username, password, ssn, phone, address, dob, state, zip, city, email,gender) "
                     + "VALUES ('" + fname + "', '" + lname + "','" + fname.concat(lname)
-                    + "', '" + pwd + "', " + ssn + ", '" + phone + "','" + address + "'," + sqlDate + ",'" + state
+                    + "', '" + md5Pwd + "', " + ssn + ", '" + phone + "','" + address + "'," + sqlDate + ",'" + state
                     + "'," + zip + ",'" + city + "','" + email + "','" + gender + "' );";
             stmt.executeUpdate(sql);
             //creating customer record in customer table
@@ -126,6 +126,8 @@ public class Admin extends Person {
                     type = "checking";
                 } else if (type.equalsIgnoreCase("s")) {
                     type = "savings";
+                } else if (type.equalsIgnoreCase("b")) {
+                    type = "brokerage";
                 }
                 //creating customer record in customer table
                 String sql = "INSERT INTO Account (ownerFN, ownerLN, ssn, balance, creationdate, Admin_id, type) "
@@ -147,6 +149,35 @@ public class Admin extends Person {
         return assigned;
     }
 
+    /**
+     * this method takes in a password and returns its MD5 value
+     * inspired from code at http://www.mkyong.com/java/java-md5-hashing-example/
+     * 
+     * @param password
+     * @return 
+     */
+    public String convertPasswordToMD5(String password){
+        StringBuffer sb = null;
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.update(password.getBytes());
+            
+            byte byteData[] = md.digest();
+            
+            //convert the byte to hex format method 1
+            sb = new StringBuffer();
+            for (int i = 0; i < byteData.length; i++) {
+                sb.append(Integer.toString((byteData[i] & 0xff) + 0x100, 16).substring(1));
+            }
+            
+            
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(Admin.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return sb.toString();
+    }
+    
     public void viewSystemAccounts() {
         SQLiteJDBC db = new SQLiteJDBC();
         try {
