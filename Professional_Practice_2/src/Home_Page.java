@@ -1,10 +1,15 @@
 
+import java.awt.Frame;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
@@ -39,8 +44,8 @@ public class Home_Page extends javax.swing.JFrame {
         passwordLabel = new javax.swing.JLabel();
         usernameTextField = new javax.swing.JTextField();
         usernameLabel1 = new javax.swing.JLabel();
-        passwordTextField = new javax.swing.JTextField();
         loginButton = new javax.swing.JButton();
+        passwordTextField = new javax.swing.JPasswordField();
         stopTEServerButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -59,9 +64,6 @@ public class Home_Page extends javax.swing.JFrame {
         usernameLabel1.setFont(new java.awt.Font("Times New Roman", 0, 12)); // NOI18N
         usernameLabel1.setText("Username :");
 
-        passwordTextField.setFont(new java.awt.Font("Times New Roman", 0, 12)); // NOI18N
-        passwordTextField.setName(""); // NOI18N
-
         loginButton.setBackground(new java.awt.Color(255, 255, 255));
         loginButton.setFont(new java.awt.Font("Times New Roman", 1, 12)); // NOI18N
         loginButton.setMnemonic('l');
@@ -73,6 +75,12 @@ public class Home_Page extends javax.swing.JFrame {
             }
         });
 
+        passwordTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                passwordTextFieldActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -80,11 +88,11 @@ public class Home_Page extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(81, 81, 81)
                 .addComponent(passwordLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 159, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(7, 7, 7)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(loginButton, javax.swing.GroupLayout.DEFAULT_SIZE, 211, Short.MAX_VALUE)
                     .addComponent(usernameTextField, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 211, Short.MAX_VALUE)
-                    .addComponent(passwordTextField, javax.swing.GroupLayout.Alignment.TRAILING))
+                    .addComponent(passwordTextField))
                 .addGap(70, 70, 70))
             .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanel1Layout.createSequentialGroup()
@@ -130,7 +138,7 @@ public class Home_Page extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(stopTEServerButton)
                     .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(20, Short.MAX_VALUE))
+                .addContainerGap(17, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -166,9 +174,36 @@ public class Home_Page extends javax.swing.JFrame {
                         stopTEServerButton.setEnabled(true);
                         //write to socket using ObjectOutputStream
                         clientOutputStream = new ObjectOutputStream(clientSocket.getOutputStream());
-                        clientOutputStream.writeObject("login");
+                        //converting password to md5
+                        String md5Pwd = convertPasswordToMD5(passwordTextField.getText());
+                        //checking user credentials
+                        clientOutputStream.writeObject("login " + usernameTextField.getText() + " " + md5Pwd);
+                        
+                        //read from socket to ObjectInputStream object
+                        clientInputStream = new ObjectInputStream(clientSocket.getInputStream());
+                        //convert ObjectInputStream object to String
+                        //this is the response from the AM server that should be passed on to the Trade Net brokerage client
+                        String responseMessage = (String) clientInputStream.readObject();
+                        
+                        System.out.println("SUCCESS "+ responseMessage);
+                        
+                        if(responseMessage.equalsIgnoreCase("valid")){
+                            Trade_Net_UI page2 = new Trade_Net_UI();
+                            page2.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                            page2.show();
+                            this.hide();
+                        }
+                        else{
+                            showMessage("User invalid!\nMake sure you enter the right credentials");
+                        }
+                        
+                        /**
+                         * MAKE IF STATEMENT TO OPEN FOLLOWING PAGE.....
+                         */
 
-                        //clientInputStream.close();
+                        
+                        //closing streams
+                        clientInputStream.close();
                         clientOutputStream.close();
                         clientSocket.close();
 
@@ -176,7 +211,9 @@ public class Home_Page extends javax.swing.JFrame {
                         showMessage("UnKnown Host");
                     } catch (IOException ex) {
                         showMessage("Did you start the AM Server?");
-                    }
+                    } catch (ClassNotFoundException ex) {
+            Logger.getLogger(Home_Page.class.getName()).log(Level.SEVERE, null, ex);
+        }
                     /**
                      * END OF CLIENT DEFINITION
                      */
@@ -210,6 +247,11 @@ public class Home_Page extends javax.swing.JFrame {
             showMessage("IO exception");
         }
     }//GEN-LAST:event_stopTEServerButtonActionPerformed
+
+    private void passwordTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_passwordTextFieldActionPerformed
+        //so when user hits "enter" from the password field, the login button is clicked
+        loginButton.doClick();
+    }//GEN-LAST:event_passwordTextFieldActionPerformed
 
     /**
      * @param args the command line arguments
@@ -257,6 +299,35 @@ public class Home_Page extends javax.swing.JFrame {
 
         JOptionPane.showMessageDialog(null, errorMessage, "Alert", JOptionPane.ERROR_MESSAGE);
     }
+    
+    /**
+     * this method takes in a password and returns its MD5 value
+     * inspired from code at http://www.mkyong.com/java/java-md5-hashing-example/
+     * 
+     * @param password
+     * @return 
+     */
+    public String convertPasswordToMD5(String password){
+        StringBuffer sb = null;
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.update(password.getBytes());
+            
+            byte byteData[] = md.digest();
+            
+            //convert the byte to hex format method 1
+            sb = new StringBuffer();
+            for (int i = 0; i < byteData.length; i++) {
+                sb.append(Integer.toString((byteData[i] & 0xff) + 0x100, 16).substring(1));
+            }
+            
+            
+        } catch (NoSuchAlgorithmException ex) {
+            showMessage("Could not encrypt password!");
+        }
+
+        return sb.toString();
+    }
 
     /**
      * displays an information message
@@ -272,7 +343,7 @@ public class Home_Page extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel1;
     private javax.swing.JButton loginButton;
     private javax.swing.JLabel passwordLabel;
-    private javax.swing.JTextField passwordTextField;
+    private javax.swing.JPasswordField passwordTextField;
     private javax.swing.JButton stopTEServerButton;
     private javax.swing.JLabel usernameLabel1;
     private javax.swing.JTextField usernameTextField;
