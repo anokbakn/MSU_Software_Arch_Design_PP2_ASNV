@@ -1,3 +1,6 @@
+THE FOLDER TO CONSIDER IS PROFESSSIONAL_PRACTICE_2_PHP
+
+
 This is the Trade Net Brokerage system.
 
 This system follows the MVC (Model-View-Controller) pattern and the Mediator pattern.
