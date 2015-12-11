@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author Armand Nokbak
+ * @author Vijayant Kanwar
  */
 public class Person extends Bank{
     private String fname;
