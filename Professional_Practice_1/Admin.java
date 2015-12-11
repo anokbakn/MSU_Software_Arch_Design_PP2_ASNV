@@ -134,6 +134,24 @@ public class Admin extends Person {
                         + "VALUES ('" + customer.getFname() + "', '" + customer.getLname()
                         + "', " + customerSsn + ", " + 0 + ", " + today + " , " + adminSsn + ", '" + type + "' );";
                 stmt.executeUpdate(sql);
+                /////////////////////////////////////////////////////////////////////////////////////////////////
+                //add brokerage account to brokerage_account table in db
+                if(type.equalsIgnoreCase("brokerage")){
+                    //the brokerage accountnumber of the account being created
+                    int brokerage_account_numb = 0;
+                    //getting the brokerage account's number fromAccount table
+                    rs = stmt.executeQuery("SELECT * FROM Account WHERE ssn="+ customerSsn +" AND type = 'brokerage' AND Admin_id = "+ adminSsn +";");
+                    while (rs.next()) { //if user found
+                        brokerage_account_numb = rs.getInt("accountnumber");
+                    }
+                    rs.close();
+                    
+                    String sql2 = "INSERT INTO brokerage_account (accountnumber, currentprofit, currentlost) "
+                        + "VALUES (" + brokerage_account_numb + ", " + 0 + ", " + 0 + " );";
+                    stmt.executeUpdate(sql2);
+                
+                }
+                
                 assigned = true;
             } else {
                 assigned = false;
