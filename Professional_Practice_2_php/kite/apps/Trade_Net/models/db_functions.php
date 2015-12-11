@@ -9,8 +9,14 @@ function connect_db(){
 	try
 	{
 	//open the database
+	
+	
+	$myfile = fopen("db_location.txt", "r") or die("Unable to open file!");
+	$location =  fread($myfile,filesize("db_location.txt"));
+	fclose($myfile);
+	
 	//This is the link from the Kite folder inside the htdocs folder of xampp
-	$db = new PDO('sqlite:../../../Users/anokbakn/Documents/Professional_Practice_1/BAMS7.db');
+	$db = new PDO($location);
 
 
 	//$result = $db->query('SELECT * FROM Person');

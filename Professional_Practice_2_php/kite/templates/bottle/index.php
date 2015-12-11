@@ -119,8 +119,9 @@
         <ul class="nav nav-pills pull-right">
           <li ><a href="../home/index">Home</a></li>
 		  <!--<li><a href="../home/buyShares">Buy/Sell</a></li>-->
-		  <li ><a href="#">Portfolio</a></li> 
-	  <li ><a href="#">Contact</a></li>
+		  <li ><a href="../home/showPortfolio">Portfolio</a></li> 
+		  <li ><a href="../home/transactions">Transaction History</a></li> 
+	  
 	  <?php
         	if((isset($_SESSION['role'])) && ($_SESSION['role']=="admin")){
         		echo '<li ><a href="../home/adminConsole">Admin Console</a></li>';
@@ -158,7 +159,8 @@
         <ul class="nav">
             <li class="active"><a href="../home/index">Home</a></li>
             <!--<li><a href="../home/buyShares">Buy/Sell</a></li>-->
-			<li><a href="#">Portfolio</a></li>
+			<li><a href="../home/showPortfolio">Portfolio</a></li>
+			<li ><a href="../home/transactions">Transaction History</a></li> 
                          
         </ul>
     </div>

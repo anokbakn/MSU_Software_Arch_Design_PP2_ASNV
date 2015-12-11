@@ -10,7 +10,9 @@
 <!-- main area -->
 <div class="col-md-8">
 	<div class="alert alert-info" >
-		<strong>Info! Please enter the company's exchange code below.<br>For Apple enter AAPL. For Facebook enter FB.</strong>
+		<strong>Info! Please enter the company's exchange code below.<br>For Apple enter AAPL. For Facebook enter FB.<br>
+		After you search for a stock, then the buy/sell option will be available.<br>
+		You can only sell shares from the company which information will be displayed below.</strong>
 	</div>
 	
 	
@@ -59,11 +61,25 @@
 				';
 				
 			}
+			
+			if(isset($_SESSION['sellSuccess']) && ($_SESSION['sellSuccess']!='')){
+				echo '<div class="alert alert-success" >
+						<strong>'.$_SESSION['sellSuccess'].'<br>You just sold '.$_SESSION['numbSharesSold'].' share(s) of '.$_SESSION['stock_info']->quotes->quote->description.'</strong>
+					</div>
+				';
+				
+			}
 				
 			$_SESSION['buyError']='';
 			$_SESSION['buySuccess']='';
+			$_SESSION['sellSuccess']='';
+			
 		?>
 		
+		<?php
+			//making sure variables are set
+			if(isset($_SESSION['stock_info'])){
+		?>
 		<form class="form-inline" role="form" method="POST" action="../Home/buyShares" style="float:left">
 			<input type="hidden" name="price" value=<?php echo $_SESSION['stock_info']->quotes->quote->last;?>>
 			<input type="text" class="form-control" name="numbShares" size="10" placeholder="# of shares">
@@ -77,10 +93,17 @@
 			<input type="hidden" name="price" value=<?php echo $_SESSION['stock_info']->quotes->quote->last;?>>
 			<div class="form-group">
 				
-				<input type="text" class="form-control" name="companyCode" size="10" placeholder="Selling Price">
+				<input type="text" class="form-control" name="sellingPrice" size="10" placeholder="Selling Price">
+				<input type="text" class="form-control" name="numb_shares_sold" size="15" placeholder="# of shares to sell">
+				
+				
 			</div>
 			<button type="submit" class="btn btn-primary">Sell</button>
 		</form>
+		<?php
+			
+			}// end of if(isset($_SESSION['stock_info']))
+		?>
 		
 	</div>
 	<br>

@@ -55,8 +55,12 @@ class Home extends Kite {
 	function logout(){
 		//connects to ongoing session
 		if(!isset($_SESSION)){session_start();}
-		$_SESSION = array();
-		session_destroy();
+		// remove all session variables
+		session_unset(); 
+
+		// destroy the session 
+		session_destroy(); 
+	
 		$this->main();
 	}
 	
@@ -86,7 +90,7 @@ class Home extends Kite {
 		
 		$this->main();
 	}
-	
+	//this function let's the brokerage account owner buy shares
 	function buyShares(){
 		//connects to ongoing session
 		if(!isset($_SESSION)){session_start();}
@@ -102,11 +106,81 @@ class Home extends Kite {
 			$_SESSION['balance'] = $_SESSION['balance'] - $amount;
 			$_SESSION['buySuccess'] = 'Shares bought successfully';
 			$_SESSION['numbShares'] = $_POST['numbShares'];
+			
+			$this->getmodel('User')->buy($_SESSION['stock_info']->quotes->quote->symbol, $_SESSION['numbShares'], $_SESSION['accountnumber'], $_POST['price'], $amount);
 		}
 		
 		
 		$this->main();
 	}
+	
+	
+	//this function let's the brokerage account owner buy shares
+	function sellShares(){
+		//connects to ongoing session
+		if(!isset($_SESSION)){session_start();}
+		$_SESSION['buyError']='';
+		$_SESSION['sellSuccess']='';
+		
+		if(isset($_SESSION['stock_info']) && isset($_SESSION['accountnumber']) && isset($_POST['numb_shares_sold']) ){
+			
+			$amount = $_POST['sellingPrice'] * $_POST['numb_shares_sold'];
+			$_SESSION['numbShares'] = $_POST['numb_shares_sold'];
+			//the current stock value
+			$stock_value =  $_SESSION['stock_info']->quotes->quote->last;
+			
+			//the if statement below checks to see whether the user owns shares in the given stock
+			if($this->getmodel('User')->ownsShares($_SESSION['accountnumber'], $_SESSION['stock_info']->quotes->quote->symbol)){
+				//check to see if the user has enough shares to sell
+				$total_numb_shares = $this->getmodel('User')->has_enough_shares($_SESSION['accountnumber'], $_SESSION['stock_info']->quotes->quote->symbol);
+				
+				if($total_numb_shares < $_POST['numb_shares_sold']){
+					$_SESSION['buyError'] = 'You do not own enough shares in that stock to sell!';
+				}
+				else{
+					//sell shares
+					$this->getmodel('User')->sell($_SESSION['stock_info']->quotes->quote->symbol, $_POST['numb_shares_sold'], $_SESSION['accountnumber'], $_POST['sellingPrice'], $amount, $stock_value);
+					$_SESSION['balance'] = $_SESSION['balance'] + $amount;
+					$_SESSION['sellSuccess'] = 'Shares Sold successfully';
+					$_SESSION['numbSharesSold'] = $_POST['numb_shares_sold'];
+					
+				}
+			}
+			else{
+				$_SESSION['buyError'] = 'You do not own shares in that stock!';
+			}
+		}
+		
+		
+		//redirect to main page
+		$this->main();
+		
+	}
+	
+	//this method redirects to the portfolio
+	function showPortfolio(){
+		//connects to ongoing session
+		if(!isset($_SESSION)){session_start();}
+		
+		if(isset($_SESSION['accountnumber'])){
+			
+			$_SESSION['portfolio'] = $this->getmodel('User')->showPortfolio($_SESSION['accountnumber']);
+		}
+		
+		
+		$this->render('portfolio');
+	}
+	
+	function transactions(){
+		//connects to ongoing session
+		if(!isset($_SESSION)){session_start();}
+		$_SESSION['transactions'] = $this->getmodel('User')->transaction_history($_SESSION['accountnumber']);
+		
+		$this->render('transactions_history');
+		
+	}
+	
+	
 
 
 }
