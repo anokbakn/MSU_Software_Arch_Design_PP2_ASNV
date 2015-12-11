@@ -1,1 +1,0 @@
-CREATE TABLE brokerage_account (accountnumber integer primary key, currentprofit float(20,4), currentlost float(20,4), foreign key(accountnumber) references Account(accountnumber) on delete no action);
