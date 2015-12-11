@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author Armand Nokbak
+ * @author Srikar Devarakonda
  */
 /**
  * AN ADMIN INHERITS PROPERTIES FROM THE PERSON CLASS
