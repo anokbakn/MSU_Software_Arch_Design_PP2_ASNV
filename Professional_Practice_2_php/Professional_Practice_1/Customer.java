@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author anokbakn
+ * @author narendramallela
  */
 public class Customer extends Person{
     
