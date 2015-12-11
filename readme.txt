@@ -1,4 +1,6 @@
-THE FOLDER TO CONSIDER IS PROFESSSIONAL_PRACTICE_2_PHP
+THE FOLDER TO CONSIDER IS PROFESSSIONAL_PRACTICE_2_PHP, and please Read WIKI -> "To Get Started" page for installation instructions.
+
+
 
 
 
